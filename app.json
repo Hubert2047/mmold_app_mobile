@@ -8,9 +8,13 @@
     "scheme": "mmoldapp",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.mmold.app",
+      "buildNumber": "1"
     },
     "android": {
+      "package": "com.mmold.app",
+      "versionCode": 1,
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -37,6 +41,12 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "0c581629-4e73-4d35-9216-ea422c57dbbb"
+      }
     }
   }
 }
