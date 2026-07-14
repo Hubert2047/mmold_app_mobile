@@ -83,6 +83,14 @@ function RootLayoutNav() {
                 <Stack.Screen name='equipment' options={{ headerShown: false }} />
                 <Stack.Screen name='system-settings' options={{ headerShown: false }} />
                 <Stack.Screen name='notification-setup' options={{ headerShown: false }} />
+                <Stack.Screen
+                    name='dashboard/[id]'
+                    options={{
+                        presentation: 'modal',
+                        headerShown: false,
+                        animation: 'slide_from_bottom',
+                    }}
+                />
             </Stack>
         </ThemeProvider>
     )

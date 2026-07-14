@@ -97,7 +97,22 @@
         "statusStandby": "待機中",
         "statusProducing": "生產中",
         "statusHighLoad": "高負載中",
-        "statusOverload": "過載中"
+        "statusOverload": "過載中",
+        "lastUpdated": "最後更新：",
+        "minutePowerTrend": "每分鐘電量趨勢(kW)（過去 24 小時）",
+        "noData": "尚無資料",
+        "energyKwh": "耗電量(KWH)",
+        "carbonKg": "碳排放量(CO₂e Kg)",
+        "maxKw": "最高耗電(KW)",
+        "agingKwh": "老化值(kwh)",
+        "minKw": "最低耗電(KW)",
+        "ratedKw": "額定功率(kw)",
+        "hourlyStatusPercent": "每小時設備狀態百分率（過去 24 小時）",
+        "legendStopped": "停機中",
+        "legendStandby": "待機中",
+        "legendProducing": "生產中",
+        "legendHighLoad": "高負載中",
+        "legendOverload": "過載中"
     },
     "account": {
         "title": "我的",
@@ -179,6 +194,7 @@
         "search": "搜尋",
         "delete": "刪除",
         "errorLoading": "資料載入失敗",
-        "retry": "重試"
+        "retry": "重試",
+        "close": "關閉"
     }
 }

@@ -97,7 +97,22 @@
         "statusStandby": "Standby",
         "statusProducing": "Producing",
         "statusHighLoad": "High Load",
-        "statusOverload": "Overload"
+        "statusOverload": "Overload",
+        "lastUpdated": "Last updated: ",
+        "minutePowerTrend": "Power Trend (kW) (Last 24h)",
+        "noData": "No data yet",
+        "energyKwh": "Energy (KWH)",
+        "carbonKg": "Carbon Emission (CO2e Kg)",
+        "maxKw": "Max Power (KW)",
+        "agingKwh": "Aging Value (kwh)",
+        "minKw": "Min Power (KW)",
+        "ratedKw": "Rated Power (kw)",
+        "hourlyStatusPercent": "Hourly Status Percentage (Last 24h)",
+        "legendStopped": "Stopped",
+        "legendStandby": "Standby",
+        "legendProducing": "Producing",
+        "legendHighLoad": "High Load",
+        "legendOverload": "Overload"
     },
     "account": {
         "title": "Me",
@@ -164,6 +179,7 @@
         "search": "Search",
         "delete": "Delete",
         "errorLoading": "Failed to load data",
-        "retry": "Retry"
+        "retry": "Retry",
+        "close": "Close"
     }
 }

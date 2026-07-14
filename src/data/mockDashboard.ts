@@ -1,35 +1,62 @@
 export type DeviceStatus = 'offline' | 'stopped' | 'standby' | 'producing' | 'highLoad' | 'overload'
 
-export type Device = {
+export interface MinutePowerPoint {
+    time: string // 'HH:mm'
+    kw: number
+}
+
+export interface HourlyStatusPoint {
+    hour: string // 'HH:mm'
+    stopped: number // 0-100
+    standby: number
+    producing: number
+    highLoad: number
+    overload: number
+}
+
+export interface Device {
     id: string
     name: string
     category: string
     meterCode: string
     phase: string
-    status: DeviceStatus
-    powerKw: number
     ratedKw: number
     ratedA: number
     ratedV: number
+    powerKw: number
+    status: DeviceStatus
+    lastUpdated: string
+    // --- dùng cho màn chi tiết thiết bị ---
+    energyKwh?: number
+    carbonKg?: number
+    maxKw?: number
+    minKw?: number
+    agingKwh?: number
+    minutePower?: MinutePowerPoint[] // rỗng/undefined => hiển thị "尚無資料"
+    hourlyStatus?: HourlyStatusPoint[] // 24 điểm theo giờ
 }
 
-export const mockStats = {
-    updatedAt: '上午10:23:46',
-    todayAlerts: 0,
-    realtimePower: 0.0,
-    monthlyEnergy: 0,
-    monthlyCarbon: 0,
-    currentDemand: 0.0,
-    predictedDemand: 0.0,
-    remainingTime: '6:13',
-    todayPeak: 0.0,
-    monthlyPeak: 0.0,
-    contractCapacity: 200,
+export interface DashboardStats {
+    updatedAt: string
+    todayAlerts: number
+    realtimePowerKw: number
+    monthlyEnergyKwh: number
+    monthlyCarbonKg: number
+    currentDemandKw: number
+    todayPeakKw: number
+    monthlyPeakKw: number
+    contractCapacityKw: number
 }
 
-export const mockChartData = {
-    labels: ['11:00', '17:00', '23:00', '05:00'],
-    values: [180, 175, 178, 172, 176, 174],
+function buildEmptyHourlyStatus(): HourlyStatusPoint[] {
+    return Array.from({ length: 24 }, (_, i) => ({
+        hour: `${String(i).padStart(2, '0')}:00`,
+        stopped: 0,
+        standby: 0,
+        producing: 0,
+        highLoad: 0,
+        overload: 0,
+    }))
 }
 
 export const mockDevices: Device[] = [
@@ -39,11 +66,19 @@ export const mockDevices: Device[] = [
         category: 'cnc',
         meterCode: 'meter_05',
         phase: '單相',
-        status: 'offline',
-        powerKw: 0,
         ratedKw: 20,
         ratedA: 40,
         ratedV: 220,
+        powerKw: 0,
+        status: 'offline',
+        lastUpdated: '2026/7/14 下午2:42:10',
+        energyKwh: 0,
+        carbonKg: 0,
+        maxKw: 0,
+        minKw: 0,
+        agingKwh: 0,
+        minutePower: [],
+        hourlyStatus: buildEmptyHourlyStatus(),
     },
     {
         id: '2',
@@ -51,34 +86,79 @@ export const mockDevices: Device[] = [
         category: 'other',
         meterCode: 'meter_20',
         phase: '單相',
-        status: 'offline',
-        powerKw: 0,
         ratedKw: 40,
         ratedA: 70,
         ratedV: 220,
+        powerKw: 0,
+        status: 'offline',
+        lastUpdated: '2026/7/14 下午2:42:10',
+        energyKwh: 0,
+        carbonKg: 0,
+        maxKw: 0,
+        minKw: 0,
+        agingKwh: 0,
+        minutePower: [],
+        hourlyStatus: buildEmptyHourlyStatus(),
     },
     {
         id: '3',
-        name: '1號射出成型機',
-        category: 'injection',
-        meterCode: 'meter_01',
-        phase: '三相',
-        status: 'producing',
-        powerKw: 15.2,
-        ratedKw: 25,
-        ratedA: 50,
-        ratedV: 380,
+        name: '2號空壓機',
+        category: 'compressor',
+        meterCode: 'meter_02',
+        phase: '單相',
+        ratedKw: 45,
+        ratedA: 80,
+        ratedV: 220,
+        powerKw: 0,
+        status: 'offline',
+        lastUpdated: '2026/7/14 下午2:42:10',
+        energyKwh: 0,
+        carbonKg: 0,
+        maxKw: 0,
+        minKw: 0,
+        agingKwh: 0,
+        minutePower: [],
+        hourlyStatus: buildEmptyHourlyStatus(),
     },
     {
         id: '4',
-        name: '空壓機',
-        category: 'compressor',
-        meterCode: 'meter_12',
-        phase: '三相',
-        status: 'standby',
-        powerKw: 2.1,
-        ratedKw: 15,
-        ratedA: 30,
-        ratedV: 380,
+        name: 'UPS不斷電',
+        category: 'other',
+        meterCode: 'meter_19',
+        phase: '3相',
+        ratedKw: 2,
+        ratedA: 18,
+        ratedV: 110,
+        powerKw: 0,
+        status: 'offline',
+        lastUpdated: '2026/7/14 下午2:42:10',
+        energyKwh: 0,
+        carbonKg: 0,
+        maxKw: 0,
+        minKw: 0,
+        agingKwh: 0,
+        minutePower: [],
+        hourlyStatus: buildEmptyHourlyStatus(),
     },
 ]
+
+export const mockStats: DashboardStats = {
+    updatedAt: '2026/7/14 下午2:42:01',
+    todayAlerts: 0,
+    realtimePowerKw: 0,
+    monthlyEnergyKwh: 0,
+    monthlyCarbonKg: 0,
+    currentDemandKw: 0,
+    todayPeakKw: 0,
+    monthlyPeakKw: 0,
+    contractCapacityKw: 0,
+}
+export interface ChartData {
+    labels: string[]
+    values: number[]
+}
+
+export const mockChartData: ChartData = {
+    labels: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00'],
+    values: [0, 0, 0, 0, 0, 0],
+}

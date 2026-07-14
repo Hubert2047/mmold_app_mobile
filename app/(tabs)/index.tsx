@@ -3,6 +3,7 @@ import { PowerChart } from '@/components/dashboard/PowerChart'
 import { StatsGrid } from '@/components/dashboard/StatsGrid'
 import { StatusFilter } from '@/components/dashboard/StatusFilter'
 import { DeviceStatus, mockDevices, mockStats } from '@/src/data/mockDashboard'
+import { router } from 'expo-router'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { FlatList, StyleSheet, Text, View } from 'react-native'
@@ -20,7 +21,9 @@ export default function DashboardScreen() {
             <FlatList
                 data={filteredDevices}
                 keyExtractor={(item) => item.id}
-                renderItem={({ item }) => <DeviceCard device={item} />}
+                renderItem={({ item }) => (
+                    <DeviceCard device={item} onPress={() => router.push(`/dashboard/${item.id}`)} />
+                )}
                 ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
                 contentContainerStyle={styles.listContent}
                 ListHeaderComponent={
