@@ -1,7 +1,11 @@
-import { Device, mockDevices } from '@/src/data/mockDashboard'
+import { useAuth } from '@/src/context/AuthContext'
+import { useDashboard } from '@/src/context/DashboardContext'
+import { useDevices } from '@/src/context/DevicesContext'
+import { getDeviceRealtime, getDeviceStatusRatio } from '@/src/services/dashboard'
+import { IDeviceRealtime, IDeviceStatusRatio, IDeviceWithStatus } from '@/src/type'
 import { Ionicons } from '@expo/vector-icons'
 import { router, useLocalSearchParams } from 'expo-router'
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Dimensions, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { LineChart } from 'react-native-chart-kit'
@@ -18,7 +22,7 @@ const STATUS_COLORS = {
     overload: '#EF4444',
 } as const
 
-function formatValue(value: number | undefined, digits = 3) {
+function formatValue(value: number | null | undefined, digits = 3) {
     return (value ?? 0).toFixed(digits)
 }
 
@@ -26,14 +30,45 @@ export default function DeviceDetailScreen() {
     const { t } = useTranslation()
     const { id } = useLocalSearchParams<{ id: string }>()
     const insets = useSafeAreaInsets()
+    const { user } = useAuth()
+    const { devices } = useDevices()
+    const { liveStatus } = useDashboard()
 
-    const currentIndex = useMemo(() => mockDevices.findIndex((d) => d.id === id), [id])
-    const device: Device | undefined = currentIndex >= 0 ? mockDevices[currentIndex] : undefined
+    const [realtime, setRealtime] = useState<IDeviceRealtime | null>(null)
+    const [statusRatio, setStatusRatio] = useState<IDeviceStatusRatio | null>(null)
+
+    const mergedDevices: IDeviceWithStatus[] = useMemo(() => {
+        const statusMap = new Map(liveStatus.map((s) => [s.deviceId, s]))
+        return devices.map((d) => {
+            const s = statusMap.get(d.id)
+            return {
+                ...d,
+                status: s?.status ?? 'offline',
+                statusSince: s?.statusSince ?? null,
+                currentPower: s?.currentPower ?? 0,
+            }
+        })
+    }, [devices, liveStatus])
+
+    const currentIndex = useMemo(() => mergedDevices.findIndex((d) => d.id === id), [mergedDevices, id])
+    const device = currentIndex >= 0 ? mergedDevices[currentIndex] : undefined
+
+    useEffect(() => {
+        if (!user?.organizationId || !id) return
+        setRealtime(null)
+        setStatusRatio(null)
+        getDeviceRealtime(user.organizationId, id)
+            .then(setRealtime)
+            .catch(() => setRealtime(null))
+        getDeviceStatusRatio(user.organizationId, id)
+            .then(setStatusRatio)
+            .catch(() => setStatusRatio(null))
+    }, [user?.organizationId, id])
 
     function goToOffset(offset: number) {
-        if (currentIndex < 0) return
-        const nextIndex = (currentIndex + offset + mockDevices.length) % mockDevices.length
-        router.setParams({ id: mockDevices[nextIndex].id })
+        if (currentIndex < 0 || mergedDevices.length === 0) return
+        const nextIndex = (currentIndex + offset + mergedDevices.length) % mergedDevices.length
+        router.setParams({ id: mergedDevices[nextIndex].id })
     }
 
     function handleClose() {
@@ -58,42 +93,42 @@ export default function DeviceDetailScreen() {
         )
     }
 
-    const hasMinutePower = device.minutePower && device.minutePower.length > 0
-    const hasHourlyStatus = device.hourlyStatus && device.hourlyStatus.length > 0
+    const hasMinutePower = (realtime?.points.length ?? 0) > 0
+    const hasHourlyStatus = (statusRatio?.buckets.length ?? 0) > 0
 
     const powerChartData = hasMinutePower
         ? {
-              labels: device.minutePower!.map((p, i) => (i % 6 === 0 ? p.time : '')),
-              datasets: [{ data: device.minutePower!.map((p) => p.kw) }],
+              labels: realtime!.points.map((p, i) => (i % 6 === 0 ? p.time : '')),
+              datasets: [{ data: realtime!.points.map((p) => p.kw) }],
           }
         : null
 
     const statusChartData = hasHourlyStatus
         ? {
-              labels: device.hourlyStatus!.map((p, i) => (i % 6 === 0 ? p.hour : '')),
+              labels: statusRatio!.buckets.map((b, i) => (i % 6 === 0 ? b.label : '')),
               datasets: [
                   {
-                      data: device.hourlyStatus!.map((p) => p.stopped),
+                      data: statusRatio!.buckets.map((b) => b.shutdownPct),
                       color: () => STATUS_COLORS.stopped,
                       strokeWidth: 2,
                   },
                   {
-                      data: device.hourlyStatus!.map((p) => p.standby),
+                      data: statusRatio!.buckets.map((b) => b.standbyPct),
                       color: () => STATUS_COLORS.standby,
                       strokeWidth: 2,
                   },
                   {
-                      data: device.hourlyStatus!.map((p) => p.producing),
+                      data: statusRatio!.buckets.map((b) => b.normalPct),
                       color: () => STATUS_COLORS.producing,
                       strokeWidth: 2,
                   },
                   {
-                      data: device.hourlyStatus!.map((p) => p.highLoad),
+                      data: statusRatio!.buckets.map((b) => b.highloadPct),
                       color: () => STATUS_COLORS.highLoad,
                       strokeWidth: 2,
                   },
                   {
-                      data: device.hourlyStatus!.map((p) => p.overload),
+                      data: statusRatio!.buckets.map((b) => b.overloadPct),
                       color: () => STATUS_COLORS.overload,
                       strokeWidth: 2,
                   },
@@ -111,7 +146,7 @@ export default function DeviceDetailScreen() {
 
                 <View style={styles.pageIndicator}>
                     <Text style={styles.pageIndicatorText}>
-                        {currentIndex + 1} / {mockDevices.length}
+                        {currentIndex + 1} / {mergedDevices.length}
                     </Text>
                 </View>
             </View>
@@ -126,8 +161,8 @@ export default function DeviceDetailScreen() {
                         {device.name}
                     </Text>
                     <Text style={styles.deviceSub} numberOfLines={1}>
-                        {device.category} · {device.phase} · {t('dashboard.lastUpdated')}
-                        {device.lastUpdated}
+                        {device.type} · {device.phase} · {t('dashboard.lastUpdated')}
+                        {device.statusSince ?? '—'}
                     </Text>
                 </View>
 
@@ -139,13 +174,13 @@ export default function DeviceDetailScreen() {
             <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
                 <View style={styles.specRow}>
                     <View style={styles.specChip}>
-                        <Text style={styles.specChipText}>{device.ratedKw} kW</Text>
+                        <Text style={styles.specChipText}>{device.ratedPowerKw} kW</Text>
                     </View>
                     <View style={styles.specChip}>
-                        <Text style={styles.specChipText}>{device.ratedA} A</Text>
+                        <Text style={styles.specChipText}>{device.ratedCurrent} A</Text>
                     </View>
                     <View style={styles.specChip}>
-                        <Text style={styles.specChipText}>{device.ratedV} V</Text>
+                        <Text style={styles.specChipText}>{device.ratedVoltage} V</Text>
                     </View>
                 </View>
 
@@ -170,12 +205,9 @@ export default function DeviceDetailScreen() {
                 </View>
 
                 <View style={styles.statsGrid}>
-                    <StatCard label={t('dashboard.energyKwh')} value={formatValue(device.energyKwh)} />
-                    <StatCard label={t('dashboard.carbonKg')} value={formatValue(device.carbonKg)} />
-                    <StatCard label={t('dashboard.maxKw')} value={formatValue(device.maxKw)} />
-                    <StatCard label={t('dashboard.agingKwh')} value={formatValue(device.agingKwh)} />
-                    <StatCard label={t('dashboard.minKw')} value={formatValue(device.minKw)} />
-                    <StatCard label={t('dashboard.ratedKw')} value={String(device.ratedKw)} />
+                    <StatCard label={t('dashboard.maxKw')} value={formatValue(realtime?.stats.maxPower)} />
+                    <StatCard label={t('dashboard.minKw')} value={formatValue(realtime?.stats.minPower)} />
+                    <StatCard label={t('dashboard.ratedKw')} value={String(device.ratedPowerKw ?? 0)} />
                 </View>
 
                 <Text style={styles.sectionTitle}>{t('dashboard.hourlyStatusPercent')}</Text>

@@ -1,4 +1,5 @@
 import { useColorScheme } from '@/components/useColorScheme'
+import { DashboardProvider } from '@/src/context/DashboardContext'
 import { DevicesProvider } from '@/src/context/DevicesContext'
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native'
 import { useFonts } from 'expo-font'
@@ -47,7 +48,9 @@ export default function RootLayout() {
             <I18nextProvider i18n={i18n}>
                 <AuthProvider>
                     <DevicesProvider>
-                        <RootLayoutNav />
+                        <DashboardProvider>
+                            <RootLayoutNav />
+                        </DashboardProvider>
                     </DevicesProvider>
                 </AuthProvider>
             </I18nextProvider>

@@ -1,21 +1,31 @@
-import { mockStats } from '@/src/data/mockDashboard'
+import { IDashboardSummary } from '@/src/type'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, Text, View } from 'react-native'
 
-const statItems = [
-    { key: 'todayAlerts', unit: '件', color: '#DC2626', valueKey: 'todayAlerts' as const },
-    { key: 'realtimePower', unit: 'kW', color: '#2563EB', valueKey: 'realtimePower' as const },
-    { key: 'monthlyEnergy', unit: 'kwh', color: '#111827', valueKey: 'monthlyEnergy' as const },
-    { key: 'monthlyCarbon', unit: 'kg', color: '#111827', valueKey: 'monthlyCarbon' as const },
-    { key: 'currentDemand', unit: 'kW', color: '#2563EB', valueKey: 'currentDemand' as const },
-    { key: 'predictedDemand', unit: 'kW', color: '#2563EB', valueKey: 'predictedDemand' as const },
-    { key: 'remainingTime', unit: '', color: '#111827', valueKey: 'remainingTime' as const },
-    { key: 'todayPeak', unit: 'kW', color: '#2563EB', valueKey: 'todayPeak' as const },
-    { key: 'monthlyPeak', unit: 'kW', color: '#2563EB', valueKey: 'monthlyPeak' as const },
-]
+type Props = {
+    stats: IDashboardSummary
+}
 
-export function StatsGrid() {
+function formatRemaining(sec: number) {
+    const m = Math.floor(sec / 60)
+    const s = sec % 60
+    return `${m}:${s.toString().padStart(2, '0')}`
+}
+
+export function StatsGrid({ stats }: Props) {
     const { t } = useTranslation()
+
+    const statItems = [
+        { key: 'todayAlerts', unit: '件', color: '#DC2626', value: stats.todayAlertCount },
+        { key: 'realtimePower', unit: 'kW', color: '#2563EB', value: stats.currentDemandKw },
+        { key: 'monthlyEnergy', unit: 'kwh', color: '#111827', value: stats.monthlyEnergyKwh },
+        { key: 'monthlyCarbon', unit: 'kg', color: '#111827', value: stats.carbonEmissionKg },
+        { key: 'currentDemand', unit: 'kW', color: '#2563EB', value: stats.currentDemandKw },
+        { key: 'predictedDemand', unit: 'kW', color: '#2563EB', value: stats.predictedDemandKw },
+        { key: 'remainingTime', unit: '', color: '#111827', value: formatRemaining(stats.demandRemainingSec) },
+        { key: 'todayPeak', unit: 'kW', color: '#2563EB', value: stats.peakTodayKw },
+        { key: 'monthlyPeak', unit: 'kW', color: '#2563EB', value: stats.peakMonthKw },
+    ]
 
     return (
         <View style={styles.grid}>
@@ -25,7 +35,7 @@ export function StatsGrid() {
                         {t(`dashboard.${item.key}`)}
                     </Text>
                     <Text style={[styles.value, { color: item.color }]}>
-                        {mockStats[item.valueKey]}
+                        {item.value}
                         {item.unit ? <Text style={styles.unit}> {item.unit}</Text> : null}
                     </Text>
                 </View>

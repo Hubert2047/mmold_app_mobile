@@ -1,11 +1,11 @@
-import { Device, DeviceStatus } from '@/src/data/mockDashboard'
+import { DeviceStatus, IDeviceWithStatus } from '@/src/type'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 
 type FilterKey = 'all' | DeviceStatus
 
 type Props = {
-    devices: Device[]
+    devices: IDeviceWithStatus[]
     activeFilter: FilterKey
     onChange: (filter: FilterKey) => void
 }
