@@ -125,8 +125,7 @@ function formatDateDisplay(dateStr: string): string {
     return `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}`
 }
 
-function formatWeekday(dateStr: string): string {
-    const weekdays = ['週日', '週一', '週二', '週三', '週四', '週五', '週六']
+function formatWeekday(dateStr: string, weekdays: string[]): string {
     return weekdays[new Date(dateStr).getDay()]
 }
 
@@ -137,6 +136,7 @@ function isToday(dateStr: string): boolean {
 export default function HistoryScreen() {
     const { t } = useTranslation()
     const [selectedDate, setSelectedDate] = useState('2026-07-14')
+    const weekdays = t('history.weekdays', { returnObjects: true }) as string[]
 
     const totalDevices = MOCK_DEVICES.length
     const producingCount = 0
@@ -162,7 +162,7 @@ export default function HistoryScreen() {
     return (
         <View style={styles.container}>
             <View style={styles.header}>
-                <Text style={styles.title}>{t('tabs.history', '歷史')}</Text>
+                <Text style={styles.title}>{t('tabs.history')}</Text>
             </View>
 
             <View style={styles.dateNav}>
@@ -173,7 +173,7 @@ export default function HistoryScreen() {
                 <View style={styles.datePill}>
                     <Ionicons name='calendar-outline' size={14} color='#6B7280' />
                     <Text style={styles.datePillText}>{formatDateDisplay(selectedDate)}</Text>
-                    <Text style={styles.datePillWeekday}>{formatWeekday(selectedDate)}</Text>
+                    <Text style={styles.datePillWeekday}>{formatWeekday(selectedDate, weekdays)}</Text>
                 </View>
 
                 <TouchableOpacity onPress={goToNextDay} style={styles.dateNavButton} hitSlop={8}>
@@ -183,50 +183,50 @@ export default function HistoryScreen() {
 
             {!isToday(selectedDate) && (
                 <TouchableOpacity onPress={goToToday}>
-                    <Text style={styles.todayLink}>{t('history.backToToday', '回到今天')}</Text>
+                    <Text style={styles.todayLink}>{t('history.backToToday')}</Text>
                 </TouchableOpacity>
             )}
 
             <View style={styles.statsRow}>
                 <View style={styles.statCard}>
-                    <Text style={styles.statLabel}>{t('history.totalDevices', '總設備')}</Text>
+                    <Text style={styles.statLabel}>{t('history.totalDevices')}</Text>
                     <Text style={styles.statValue}>
                         {totalDevices}
-                        <Text style={styles.statUnit}> {t('history.unitDevice', '台')}</Text>
+                        <Text style={styles.statUnit}> {t('history.unitDevice')}</Text>
                     </Text>
                 </View>
                 <View style={styles.statCard}>
-                    <Text style={styles.statLabel}>{t('history.inProduction', '生產中')}</Text>
+                    <Text style={styles.statLabel}>{t('history.inProduction')}</Text>
                     <Text style={[styles.statValue, { color: '#22C55E' }]}>
                         {producingCount}
-                        <Text style={styles.statUnit}> {t('history.unitHour', '小時')}</Text>
+                        <Text style={styles.statUnit}> {t('history.unitHour')}</Text>
                     </Text>
                 </View>
                 <View style={styles.statCard}>
-                    <Text style={styles.statLabel}>{t('history.highLoad', '高負載中')}</Text>
+                    <Text style={styles.statLabel}>{t('history.highLoad')}</Text>
                     <Text style={[styles.statValue, { color: '#F59E0B' }]}>
                         {highLoadCount}
-                        <Text style={styles.statUnit}> {t('history.unitHour', '小時')}</Text>
+                        <Text style={styles.statUnit}> {t('history.unitHour')}</Text>
                     </Text>
                 </View>
                 <View style={styles.statCard}>
-                    <Text style={styles.statLabel}>{t('history.overload', '過載中')}</Text>
+                    <Text style={styles.statLabel}>{t('history.overload')}</Text>
                     <Text style={[styles.statValue, { color: '#EF4444' }]}>
                         {overloadCount}
-                        <Text style={styles.statUnit}> {t('history.unitHour', '小時')}</Text>
+                        <Text style={styles.statUnit}> {t('history.unitHour')}</Text>
                     </Text>
                 </View>
             </View>
 
             <View style={styles.legendSection}>
-                <Text style={styles.legendTitle}>{t('history.deviceTimeline', '每台裝置歷程')}</Text>
+                <Text style={styles.legendTitle}>{t('history.deviceTimeline')}</Text>
                 <View style={styles.legendRow}>
-                    <LegendDot color={STATUS_COLORS.offline} label={t('history.status.offline', '離線中')} />
-                    <LegendDot color={STATUS_COLORS.standby} label={t('history.status.standby', '停機中')} />
-                    <LegendDot color={STATUS_COLORS.idle} label={t('history.status.idle', '待機中')} />
-                    <LegendDot color={STATUS_COLORS.production} label={t('history.status.production', '生產中')} />
-                    <LegendDot color={STATUS_COLORS.highload} label={t('history.status.highload', '高負載')} />
-                    <LegendDot color={STATUS_COLORS.overload} label={t('history.status.overload', '過載中')} />
+                    <LegendDot color={STATUS_COLORS.offline} label={t('history.status.offline')} />
+                    <LegendDot color={STATUS_COLORS.standby} label={t('history.status.standby')} />
+                    <LegendDot color={STATUS_COLORS.idle} label={t('history.status.idle')} />
+                    <LegendDot color={STATUS_COLORS.production} label={t('history.status.production')} />
+                    <LegendDot color={STATUS_COLORS.highload} label={t('history.status.highload')} />
+                    <LegendDot color={STATUS_COLORS.overload} label={t('history.status.overload')} />
                 </View>
             </View>
 

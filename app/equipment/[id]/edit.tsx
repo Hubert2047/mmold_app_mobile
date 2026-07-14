@@ -20,17 +20,14 @@ export default function EditEquipmentScreen() {
 
     useEffect(() => {
         if (!existing) {
-            Alert.alert(t('equipment.notFound', '找不到此設備'))
+            Alert.alert(t('equipment.notFound'))
             router.back()
         }
     }, [])
 
     function handleSave() {
         if (!name.trim() || !meterId.trim()) {
-            Alert.alert(
-                t('equipment.validationTitle', '請完整填寫'),
-                t('equipment.validationMessage', '請輸入設備名稱與電表編號'),
-            )
+            Alert.alert(t('equipment.validationTitle'), t('equipment.validationMessage'))
             return
         }
 
@@ -50,18 +47,18 @@ export default function EditEquipmentScreen() {
     return (
         <View style={styles.container}>
             <View style={styles.header}>
-                <TouchableOpacity onPress={() => router.back()} hitSlop={10}>
+                <TouchableOpacity style={styles.backArea} onPress={() => router.back()} hitSlop={10}>
                     <Ionicons name='chevron-back' size={22} color='#111827' />
+                    <Text style={styles.title}>{t('equipment.editTitle')}</Text>
                 </TouchableOpacity>
-                <Text style={styles.title}>{t('equipment.editTitle', '編輯設備')}</Text>
                 <View style={{ width: 22 }} />
             </View>
 
             <ScrollView contentContainerStyle={styles.form} showsVerticalScrollIndicator={false}>
-                <Text style={styles.label}>{t('equipment.name', '設備名稱')}</Text>
+                <Text style={styles.label}>{t('equipment.name')}</Text>
                 <TextInput style={styles.input} value={name} onChangeText={setName} placeholderTextColor='#9CA3AF' />
 
-                <Text style={styles.label}>{t('equipment.category', '設備類型')}</Text>
+                <Text style={styles.label}>{t('equipment.category')}</Text>
                 <View style={styles.chipRow}>
                     {CATEGORY_OPTIONS.map((opt) => (
                         <TouchableOpacity
@@ -75,7 +72,7 @@ export default function EditEquipmentScreen() {
                     ))}
                 </View>
 
-                <Text style={styles.label}>{t('equipment.meterId', '電表編號')}</Text>
+                <Text style={styles.label}>{t('equipment.meterId')}</Text>
                 <TextInput
                     style={styles.input}
                     value={meterId}
@@ -83,7 +80,7 @@ export default function EditEquipmentScreen() {
                     placeholderTextColor='#9CA3AF'
                 />
 
-                <Text style={styles.label}>{t('equipment.phase', '相數')}</Text>
+                <Text style={styles.label}>{t('equipment.phase')}</Text>
                 <View style={styles.chipRow}>
                     {PHASE_OPTIONS.map((opt) => (
                         <TouchableOpacity
@@ -131,7 +128,7 @@ export default function EditEquipmentScreen() {
 
             <View style={styles.footer}>
                 <TouchableOpacity style={styles.saveButton} onPress={handleSave} activeOpacity={0.85}>
-                    <Text style={styles.saveButtonText}>{t('equipment.save', '儲存')}</Text>
+                    <Text style={styles.saveButtonText}>{t('equipment.save')}</Text>
                 </TouchableOpacity>
             </View>
         </View>
@@ -147,6 +144,11 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         paddingTop: 56,
         paddingBottom: 14,
+    },
+    backArea: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
     },
     title: { fontSize: 17, fontWeight: '700', color: '#111827' },
     form: { paddingHorizontal: 16, paddingBottom: 20, gap: 4 },

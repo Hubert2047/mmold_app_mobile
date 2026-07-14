@@ -6,11 +6,23 @@ import { useCallback, useMemo, useRef, useState, type ComponentRef } from 'react
 import { useTranslation } from 'react-i18next'
 import { FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
 import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable'
+
+type SwipeableRef = React.RefObject<ComponentRef<typeof Swipeable> | null>
+
 export default function EquipmentManagementScreen() {
     const { t } = useTranslation()
     const [equipment, setEquipment] = useState<Equipment[]>(getEquipmentList())
     const [searchText, setSearchText] = useState('')
-    const swipeableRefs = useRef<Map<string, ComponentRef<typeof Swipeable>>>(new Map())
+    const swipeableRefs = useRef<Map<string, SwipeableRef>>(new Map())
+
+    function getSwipeableRef(id: string): SwipeableRef {
+        let ref = swipeableRefs.current.get(id)
+        if (!ref) {
+            ref = { current: null }
+            swipeableRefs.current.set(id, ref)
+        }
+        return ref
+    }
 
     useFocusEffect(
         useCallback(() => {
@@ -31,17 +43,17 @@ export default function EquipmentManagementScreen() {
 
     function closeOtherSwipeables(exceptId: string) {
         swipeableRefs.current.forEach((ref, id) => {
-            if (id !== exceptId) ref.close()
+            if (id !== exceptId) ref.current?.close()
         })
     }
 
     function handleEdit(item: Equipment) {
-        swipeableRefs.current.get(item.id)?.close()
+        swipeableRefs.current.get(item.id)?.current?.close()
         router.push(`/equipment/${item.id}/edit`)
     }
 
     function handleDelete(item: Equipment) {
-        swipeableRefs.current.get(item.id)?.close()
+        swipeableRefs.current.get(item.id)?.current?.close()
         deleteEquipment(item.id)
         setEquipment([...getEquipmentList()])
     }
@@ -53,10 +65,10 @@ export default function EquipmentManagementScreen() {
     return (
         <View style={styles.container}>
             <View style={styles.header}>
-                <TouchableOpacity onPress={() => router.back()} hitSlop={10}>
+                <TouchableOpacity style={styles.backArea} onPress={() => router.back()} hitSlop={10}>
                     <Ionicons name='chevron-back' size={22} color='#111827' />
+                    <Text style={styles.title}>{t('equipment.title')}</Text>
                 </TouchableOpacity>
-                <Text style={styles.title}>{t('equipment.title', '設備管理')}</Text>
                 <View style={{ width: 22 }} />
             </View>
 
@@ -64,7 +76,7 @@ export default function EquipmentManagementScreen() {
                 <Ionicons name='search' size={16} color='#9CA3AF' />
                 <TextInput
                     style={styles.searchInput}
-                    placeholder={t('equipment.searchPlaceholder', '搜尋設備名稱、ID、類型...')}
+                    placeholder={t('equipment.searchPlaceholder')}
                     placeholderTextColor='#9CA3AF'
                     value={searchText}
                     onChangeText={setSearchText}
@@ -78,10 +90,7 @@ export default function EquipmentManagementScreen() {
                 showsVerticalScrollIndicator={false}
                 renderItem={({ item }) => (
                     <Swipeable
-                        ref={(ref) => {
-                            if (ref) swipeableRefs.current.set(item.id, ref)
-                            else swipeableRefs.current.delete(item.id)
-                        }}
+                        ref={getSwipeableRef(item.id)}
                         onSwipeableWillOpen={() => closeOtherSwipeables(item.id)}
                         renderRightActions={() => (
                             <View style={styles.swipeActions}>
@@ -131,7 +140,7 @@ export default function EquipmentManagementScreen() {
                 ListEmptyComponent={
                     <View style={styles.emptyState}>
                         <Ionicons name='cube-outline' size={40} color='#D1D5DB' />
-                        <Text style={styles.emptyText}>{t('equipment.noResults', '找不到符合的設備')}</Text>
+                        <Text style={styles.emptyText}>{t('equipment.noResults')}</Text>
                     </View>
                 }
             />
@@ -152,6 +161,11 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         paddingTop: 56,
         paddingBottom: 14,
+    },
+    backArea: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
     },
     title: { fontSize: 17, fontWeight: '700', color: '#111827' },
     searchBar: {

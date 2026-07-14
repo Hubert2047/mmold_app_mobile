@@ -38,23 +38,23 @@ export default function RegisterScreen() {
     const inviteCodeError =
         serverFieldError.inviteCode ??
         (touched.inviteCode && inviteCode.length > 0 && inviteCode.length < MIN_INVITE_CODE_LENGTH
-            ? t('register.inviteCodeTooShort', `工廠代碼至少需 ${MIN_INVITE_CODE_LENGTH} 個字元`)
+            ? t('register.inviteCodeTooShort')
             : null)
 
     const usernameError =
         serverFieldError.username ??
         (touched.username && username.length > 0 && username.length < MIN_USERNAME_LENGTH
-            ? t('register.usernameTooShort', `帳號至少需 ${MIN_USERNAME_LENGTH} 個字元`)
+            ? t('register.usernameTooShort')
             : null)
 
     const passwordError =
         touched.password && password.length > 0 && password.length < MIN_PASSWORD_LENGTH
-            ? t('register.passwordTooShort', `密碼至少需 ${MIN_PASSWORD_LENGTH} 個字元`)
+            ? t('register.passwordTooShort')
             : null
 
     const confirmPasswordError =
         touched.confirmPassword && confirmPassword.length > 0 && confirmPassword !== password
-            ? t('register.passwordMismatch', '兩次密碼不一致')
+            ? t('register.passwordMismatch')
             : null
 
     const isFormValid =
@@ -114,13 +114,13 @@ export default function RegisterScreen() {
             ])
         } catch (err) {
             console.error('Register error:', err)
-            const message = err instanceof ApiError ? err.message : t('register.unknownError', '發生未知錯誤')
+            const message = err instanceof ApiError ? err.message : t('register.unknownError')
             const targetField = mapServerErrorToField(message)
 
             if (targetField === 'inviteCode') {
-                setServerFieldError({ inviteCode: t('register.invalidInviteCode', '工廠代碼無效') })
+                setServerFieldError({ inviteCode: t('register.invalidInviteCode') })
             } else if (targetField === 'username') {
-                setServerFieldError({ username: t('register.usernameTaken', '此帳號已被使用') })
+                setServerFieldError({ username: t('register.usernameTaken') })
             } else {
                 Alert.alert(t('register.registerFailed'), message)
             }
@@ -264,9 +264,9 @@ export default function RegisterScreen() {
                     </TouchableOpacity>
 
                     <View style={styles.loginRow}>
-                        <Text style={styles.loginRowText}>{t('register.haveAccount', '已經有帳號？')}</Text>
+                        <Text style={styles.loginRowText}>{t('register.haveAccount')}</Text>
                         <TouchableOpacity onPress={goToLogin} hitSlop={6}>
-                            <Text style={styles.loginRowLink}>{t('register.loginNow', '登入')}</Text>
+                            <Text style={styles.loginRowLink}>{t('register.loginNow')}</Text>
                         </TouchableOpacity>
                     </View>
                 </View>

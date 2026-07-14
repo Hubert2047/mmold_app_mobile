@@ -61,6 +61,7 @@ export default function AccountScreen() {
             iconBg: '#F3F4F6',
             titleKey: 'account.systemManagement',
             descKey: 'account.systemManagementDesc',
+            onPress: () => router.push('/system-settings'),
         },
         {
             icon: 'notifications-outline',
@@ -68,6 +69,7 @@ export default function AccountScreen() {
             iconBg: '#F3F4F6',
             titleKey: 'account.notifications',
             descKey: 'account.notificationsDesc',
+            onPress: () => router.push('/notification-setup'),
         },
         {
             icon: 'language-outline',

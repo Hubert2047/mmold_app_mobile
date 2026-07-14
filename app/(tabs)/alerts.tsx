@@ -54,49 +54,64 @@ const MOCK_ALERTS: AlertItem[] = [
     },
 ]
 
-const FILTERS = ['全部類別', '電力品質'] as const
+// 'all' 與 'powerQuality' 是穩定的內部篩選 key（不隨語系變動）
+const FILTERS = ['all', 'powerQuality'] as const
 type FilterType = (typeof FILTERS)[number]
+
+// alert.category 目前是 mock data 內的原始標籤，用來跟篩選 key 對應
+const CATEGORY_BY_FILTER: Record<FilterType, string | null> = {
+    all: null,
+    powerQuality: '電力品質',
+}
 
 export default function AlertsScreen() {
     const { t } = useTranslation()
-    const [activeFilter, setActiveFilter] = useState<FilterType>('全部類別')
+    const [activeFilter, setActiveFilter] = useState<FilterType>('all')
 
     const highCount = MOCK_ALERTS.filter((a) => a.severity === 'HIGH').length
     const mediumCount = MOCK_ALERTS.filter((a) => a.severity === 'MEDIUM').length
     const lowCount = MOCK_ALERTS.filter((a) => a.severity === 'LOW').length
 
+    const targetCategory = CATEGORY_BY_FILTER[activeFilter]
     const filteredAlerts =
-        activeFilter === '全部類別' ? MOCK_ALERTS : MOCK_ALERTS.filter((a) => a.category === activeFilter)
+        targetCategory === null ? MOCK_ALERTS : MOCK_ALERTS.filter((a) => a.category === targetCategory)
+
+    function filterLabel(filter: FilterType) {
+        return filter === 'all' ? t('alerts.allCategories') : t('alerts.powerQuality')
+    }
 
     return (
         <View style={styles.container}>
             <View style={styles.header}>
-                <Text style={styles.title}>{t('tabs.alerts', '警報')}</Text>
-                <TouchableOpacity style={styles.recordButton}>
-                    <Ionicons name='document-text-outline' size={16} color='#111827' />
-                    <Text style={styles.recordButtonText}>{t('alerts.record', '紀錄')}</Text>
-                </TouchableOpacity>
+                <View style={styles.headerSide} />
+                <Text style={styles.title}>{t('tabs.alerts')}</Text>
+                <View style={styles.headerSide}>
+                    <TouchableOpacity style={styles.recordButton}>
+                        <Ionicons name='document-text-outline' size={16} color='#111827' />
+                        <Text style={styles.recordButtonText}>{t('alerts.record')}</Text>
+                    </TouchableOpacity>
+                </View>
             </View>
 
             <View style={styles.filterGroup}>
-                <Text style={styles.groupLabel}>{t('alerts.riskLevel', '風險等級')}</Text>
+                <Text style={styles.groupLabel}>{t('alerts.riskLevel')}</Text>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
                     <View style={[styles.chip, styles.chipActive]}>
                         <View style={[styles.dot, { backgroundColor: '#EF4444' }]} />
                         <Text style={styles.chipTextActive}>
-                            {t('alerts.highRisk', '高風險')} ({highCount})
+                            {t('alerts.highRisk')} ({highCount})
                         </Text>
                     </View>
                     <View style={styles.chip}>
                         <View style={[styles.dot, { backgroundColor: '#F59E0B' }]} />
                         <Text style={styles.chipText}>
-                            {t('alerts.mediumRisk', '中風險')} ({mediumCount})
+                            {t('alerts.mediumRisk')} ({mediumCount})
                         </Text>
                     </View>
                     <View style={styles.chip}>
                         <View style={[styles.dot, { backgroundColor: '#22C55E' }]} />
                         <Text style={styles.chipText}>
-                            {t('alerts.lowRisk', '低風險')} ({lowCount})
+                            {t('alerts.lowRisk')} ({lowCount})
                         </Text>
                     </View>
                 </ScrollView>
@@ -105,7 +120,7 @@ export default function AlertsScreen() {
             <View style={styles.divider} />
 
             <View style={styles.filterGroup}>
-                <Text style={styles.groupLabel}>{t('alerts.category', '類別')}</Text>
+                <Text style={styles.groupLabel}>{t('alerts.category')}</Text>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
                     {FILTERS.map((filter) => {
                         const isActive = filter === activeFilter
@@ -115,9 +130,7 @@ export default function AlertsScreen() {
                                 style={[styles.chip, isActive && styles.chipActive]}
                                 onPress={() => setActiveFilter(filter)}>
                                 <Text style={isActive ? styles.chipTextActive : styles.chipText}>
-                                    {filter === '全部類別'
-                                        ? t('alerts.allCategories', '全部類別')
-                                        : t('alerts.powerQuality', '電力品質')}
+                                    {filterLabel(filter)}
                                 </Text>
                             </TouchableOpacity>
                         )
@@ -143,18 +156,18 @@ export default function AlertsScreen() {
                         </View>
 
                         <View style={styles.infoRow}>
-                            <Text style={styles.infoLabel}>{t('alerts.time', '時間')}</Text>
+                            <Text style={styles.infoLabel}>{t('alerts.time')}</Text>
                             <Text style={styles.infoValue}>{alert.time}</Text>
                         </View>
 
                         <View style={styles.infoRow}>
-                            <Text style={styles.infoLabel}>{t('alerts.abnormal', '異常')}</Text>
+                            <Text style={styles.infoLabel}>{t('alerts.abnormal')}</Text>
                             <Text style={styles.infoValue}>{alert.description}</Text>
                         </View>
 
                         <View style={styles.actionRow}>
                             <TouchableOpacity style={styles.actionButton}>
-                                <Text style={styles.actionButtonText}>{t('alerts.excludeReport', '排除回報')}</Text>
+                                <Text style={styles.actionButtonText}>{t('alerts.excludeReport')}</Text>
                             </TouchableOpacity>
                         </View>
                     </View>
@@ -174,7 +187,11 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         marginBottom: 18,
     },
-    title: { fontSize: 20, fontWeight: '700', color: '#111827' },
+    headerSide: {
+        minWidth: 70,
+        alignItems: 'flex-end',
+    },
+    title: { fontSize: 20, fontWeight: '700', color: '#111827', textAlign: 'center', flex: 1 },
     recordButton: {
         flexDirection: 'row',
         alignItems: 'center',

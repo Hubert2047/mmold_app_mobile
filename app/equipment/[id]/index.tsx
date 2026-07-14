@@ -14,36 +14,32 @@ export default function EquipmentDetailScreen() {
     }
 
     function handleDelete() {
-        Alert.alert(
-            t('equipment.deleteConfirmTitle', '刪除設備'),
-            t('equipment.deleteConfirmMessage', '確定要刪除這筆設備嗎？'),
-            [
-                { text: t('account.cancel', '取消'), style: 'cancel' },
-                {
-                    text: t('equipment.delete', '刪除'),
-                    style: 'destructive',
-                    onPress: () => {
-                        deleteEquipment(id)
-                        router.back()
-                    },
+        Alert.alert(t('equipment.deleteConfirmTitle'), t('equipment.deleteConfirmMessage'), [
+            { text: t('account.cancel'), style: 'cancel' },
+            {
+                text: t('equipment.delete'),
+                style: 'destructive',
+                onPress: () => {
+                    deleteEquipment(id)
+                    router.back()
                 },
-            ],
-        )
+            },
+        ])
     }
 
     if (!item) {
         return (
             <View style={styles.container}>
                 <View style={styles.header}>
-                    <TouchableOpacity onPress={() => router.back()} hitSlop={10}>
+                    <TouchableOpacity style={styles.backArea} onPress={() => router.back()} hitSlop={10}>
                         <Ionicons name='chevron-back' size={22} color='#111827' />
+                        <Text style={styles.title}>{t('equipment.detailTitle')}</Text>
                     </TouchableOpacity>
-                    <Text style={styles.title}>{t('equipment.detailTitle', '設備詳情')}</Text>
                     <View style={{ width: 22 }} />
                 </View>
                 <View style={styles.emptyState}>
                     <Ionicons name='alert-circle-outline' size={40} color='#D1D5DB' />
-                    <Text style={styles.emptyText}>{t('equipment.notFound', '找不到此設備')}</Text>
+                    <Text style={styles.emptyText}>{t('equipment.notFound')}</Text>
                 </View>
             </View>
         )
@@ -52,10 +48,10 @@ export default function EquipmentDetailScreen() {
     return (
         <View style={styles.container}>
             <View style={styles.header}>
-                <TouchableOpacity onPress={() => router.back()} hitSlop={10}>
+                <TouchableOpacity style={styles.backArea} onPress={() => router.back()} hitSlop={10}>
                     <Ionicons name='chevron-back' size={22} color='#111827' />
+                    <Text style={styles.title}>{t('equipment.detailTitle')}</Text>
                 </TouchableOpacity>
-                <Text style={styles.title}>{t('equipment.detailTitle', '設備詳情')}</Text>
                 <TouchableOpacity onPress={handleEdit} hitSlop={10}>
                     <Ionicons name='pencil-outline' size={20} color='#111827' />
                 </TouchableOpacity>
@@ -75,8 +71,8 @@ export default function EquipmentDetailScreen() {
 
                     <View style={styles.divider} />
 
-                    <InfoRow label={t('equipment.meterId', '電表編號')} value={item.meterId} />
-                    <InfoRow label={t('equipment.phase', '相數')} value={item.phase} />
+                    <InfoRow label={t('equipment.meterId')} value={item.meterId} />
+                    <InfoRow label={t('equipment.phase')} value={item.phase} />
                     <InfoRow label='kW' value={String(item.kw)} />
                     <InfoRow label='A' value={String(item.a)} />
                     <InfoRow label='V' value={String(item.v)} />
@@ -84,7 +80,7 @@ export default function EquipmentDetailScreen() {
 
                 <TouchableOpacity style={styles.deleteCard} onPress={handleDelete}>
                     <Ionicons name='trash-outline' size={18} color='#DC2626' />
-                    <Text style={styles.deleteText}>{t('equipment.delete', '刪除設備')}</Text>
+                    <Text style={styles.deleteText}>{t('equipment.delete')}</Text>
                 </TouchableOpacity>
             </ScrollView>
         </View>
@@ -109,6 +105,11 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         paddingTop: 56,
         paddingBottom: 14,
+    },
+    backArea: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
     },
     title: { fontSize: 17, fontWeight: '700', color: '#111827' },
     content: { paddingHorizontal: 16, paddingBottom: 30, gap: 12 },

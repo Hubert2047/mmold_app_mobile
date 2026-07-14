@@ -24,13 +24,53 @@
         "registerFailed": "Registration Failed",
         "passwordMismatch": "Password and confirm password do not match",
         "registerSuccess": "Registration Successful",
-        "registerSuccessMessage": "Please log in with your account"
+        "registerSuccessMessage": "Please log in with your account",
+        "inviteCodeTooShort": "Invite code must be at least 7 characters",
+        "usernameTooShort": "Username must be at least 3 characters",
+        "passwordTooShort": "Password must be at least 6 characters",
+        "unknownError": "Something went wrong, please try again",
+        "invalidInviteCode": "Invalid invite code",
+        "usernameTaken": "This username is already taken",
+        "haveAccount": "Already have an account?",
+        "loginNow": "Log in now"
     },
     "tabs": {
         "dashboard": "Dashboard",
         "history": "History",
         "alerts": "Alerts",
         "account": "Me"
+    },
+    "history": {
+        "backToToday": "Back to Today",
+        "totalDevices": "Total Devices",
+        "unitDevice": "devices",
+        "inProduction": "In Production",
+        "unitHour": "hrs",
+        "highLoad": "High Load",
+        "overload": "Overload",
+        "deviceTimeline": "Device Timeline",
+        "status": {
+            "offline": "Offline",
+            "standby": "Stopped",
+            "idle": "Standby",
+            "production": "Producing",
+            "highload": "High Load",
+            "overload": "Overload"
+        },
+        "weekdays": ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+    },
+    "alerts": {
+        "record": "Records",
+        "riskLevel": "Risk Level",
+        "highRisk": "High Risk",
+        "mediumRisk": "Medium Risk",
+        "lowRisk": "Low Risk",
+        "category": "Category",
+        "allCategories": "All Categories",
+        "powerQuality": "Power Quality",
+        "time": "Time",
+        "abnormal": "Issue",
+        "excludeReport": "Exclude / Report"
     },
     "dashboard": {
         "updatedAt": "Updated at",
@@ -82,6 +122,39 @@
         "language": "Language",
         "languageDesc": "Change app language",
         "selectLanguage": "Select language"
+    },
+    "notifications": {
+        "title": "Push notification setup",
+        "intro": "We use the free ntfy app to push important alerts (equipment warnings, gateway offline, pending approvals, etc.) straight to your phone. Follow the steps below to subscribe:",
+        "step1Title": "Install the ntfy app",
+        "step2Title": "Set the default server",
+        "step2Desc": "In the ntfy app, go to Settings → Default server and enter:",
+        "step3Title": "Add a subscription topic",
+        "step3Desc": "From the ntfy home screen, tap + Subscribe to topic and paste the topic name below:",
+        "warning": "Make sure to change the default server to the URL above, otherwise your subscription will go to ntfy's public server and you won't receive notifications.",
+        "copy": "Tap to copy",
+        "copied": "Copied"
+    },
+    "equipment": {
+        "title": "Equipment management",
+        "searchPlaceholder": "Search by name, ID, or category...",
+        "noResults": "No matching equipment found",
+        "newTitle": "Add equipment",
+        "name": "Equipment name",
+        "namePlaceholder": "e.g. CNC molding machine 2",
+        "category": "Category",
+        "meterId": "Meter ID",
+        "phase": "Phase",
+        "save": "Save",
+        "validationTitle": "Missing information",
+        "validationMessage": "Please enter the equipment name and meter ID",
+        "detailTitle": "Equipment Details",
+        "notFound": "Equipment not found",
+        "deleteConfirmTitle": "Delete Equipment",
+        "deleteConfirmMessage": "Are you sure you want to delete this equipment?",
+        "delete": "Delete",
+        "deleteEquipment": "Delete Equipment",
+        "editTitle": "Edit Equipment"
     },
     "common": {
         "cancel": "Cancel",

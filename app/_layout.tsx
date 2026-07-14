@@ -81,6 +81,8 @@ function RootLayoutNav() {
                 <Stack.Screen name='(tabs)' options={{ headerShown: false }} />
                 <Stack.Screen name='register' options={{ headerShown: false }} />
                 <Stack.Screen name='equipment' options={{ headerShown: false }} />
+                <Stack.Screen name='system-settings' options={{ headerShown: false }} />
+                <Stack.Screen name='notification-setup' options={{ headerShown: false }} />
             </Stack>
         </ThemeProvider>
     )
