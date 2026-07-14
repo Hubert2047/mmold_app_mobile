@@ -1,3 +1,4 @@
+import LoadingOverlay from '@/components/LoadingOverlay'
 import { Ionicons } from '@expo/vector-icons'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { router } from 'expo-router'
@@ -153,6 +154,8 @@ export default function LoginScreen() {
                     </View>
                 </View>
             </ScrollView>
+
+            <LoadingOverlay visible={submitting} label={t('login.loggingIn')} />
         </KeyboardAvoidingView>
     )
 }

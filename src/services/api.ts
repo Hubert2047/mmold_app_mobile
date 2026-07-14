@@ -12,6 +12,28 @@ export class ApiError extends Error {
 
 let refreshPromise: Promise<string | null> | null = null
 
+function extractErrorMessage(data: any): string {
+    const detail = data?.detail ?? data?.message ?? data?.error
+
+    if (Array.isArray(detail)) {
+        return detail
+            .map((item) => {
+                if (typeof item === 'string') return item
+                const field = Array.isArray(item?.loc) ? item.loc[item.loc.length - 1] : undefined
+                if (field && item?.msg) return `${field}: ${item.msg}`
+                if (item?.msg) return item.msg
+                return JSON.stringify(item)
+            })
+            .join('\n')
+    }
+
+    if (typeof detail === 'string' && detail.length > 0) {
+        return detail
+    }
+
+    return 'Error'
+}
+
 async function refreshAccessToken(): Promise<string | null> {
     const tokens = getTokens()
     if (!tokens?.refreshToken) return null
@@ -77,8 +99,7 @@ export async function apiFetch(path: string, options: RequestInit = {}, accessTo
     }
 
     if (!res.ok) {
-        const message = data?.message || data?.detail || 'Error'
-        throw new ApiError(message, res.status)
+        throw new ApiError(extractErrorMessage(data), res.status)
     }
 
     return data

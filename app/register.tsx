@@ -1,3 +1,4 @@
+import LoadingOverlay from '@/components/LoadingOverlay'
 import { Ionicons } from '@expo/vector-icons'
 import { router } from 'expo-router'
 import { useState } from 'react'
@@ -18,6 +19,10 @@ import { ApiError, apiFetch } from '../src/services/api'
 type FieldName = 'inviteCode' | 'username' | 'name' | 'password' | 'confirmPassword'
 const webNoOutlineStyle = { outlineStyle: 'none', boxShadow: 'none' } as any
 
+const MIN_INVITE_CODE_LENGTH = 7
+const MIN_USERNAME_LENGTH = 3
+const MIN_PASSWORD_LENGTH = 6
+
 export default function RegisterScreen() {
     const { t } = useTranslation()
     const [inviteCode, setInviteCode] = useState('')
@@ -27,10 +32,68 @@ export default function RegisterScreen() {
     const [confirmPassword, setConfirmPassword] = useState('')
     const [submitting, setSubmitting] = useState(false)
     const [focusedField, setFocusedField] = useState<FieldName | null>(null)
+    const [touched, setTouched] = useState<Partial<Record<FieldName, boolean>>>({})
+    const [serverFieldError, setServerFieldError] = useState<Partial<Record<FieldName, string>>>({})
+
+    const inviteCodeError =
+        serverFieldError.inviteCode ??
+        (touched.inviteCode && inviteCode.length > 0 && inviteCode.length < MIN_INVITE_CODE_LENGTH
+            ? t('register.inviteCodeTooShort', `工廠代碼至少需 ${MIN_INVITE_CODE_LENGTH} 個字元`)
+            : null)
+
+    const usernameError =
+        serverFieldError.username ??
+        (touched.username && username.length > 0 && username.length < MIN_USERNAME_LENGTH
+            ? t('register.usernameTooShort', `帳號至少需 ${MIN_USERNAME_LENGTH} 個字元`)
+            : null)
+
+    const passwordError =
+        touched.password && password.length > 0 && password.length < MIN_PASSWORD_LENGTH
+            ? t('register.passwordTooShort', `密碼至少需 ${MIN_PASSWORD_LENGTH} 個字元`)
+            : null
+
+    const confirmPasswordError =
+        touched.confirmPassword && confirmPassword.length > 0 && confirmPassword !== password
+            ? t('register.passwordMismatch', '兩次密碼不一致')
+            : null
+
+    const isFormValid =
+        inviteCode.length >= MIN_INVITE_CODE_LENGTH &&
+        username.length >= MIN_USERNAME_LENGTH &&
+        password.length >= MIN_PASSWORD_LENGTH &&
+        password === confirmPassword &&
+        name.trim().length > 0
+
+    function markTouched(field: FieldName) {
+        setTouched((prev) => ({ ...prev, [field]: true }))
+    }
+
+    function clearServerError(field: FieldName) {
+        setServerFieldError((prev) => {
+            if (!prev[field]) return prev
+            const next = { ...prev }
+            delete next[field]
+            return next
+        })
+    }
+
+    function mapServerErrorToField(message: string): FieldName | null {
+        const lower = message.toLowerCase()
+        if (lower.includes('invite code')) return 'inviteCode'
+        if (lower.includes('username')) return 'username'
+        return null
+    }
 
     async function handleRegister() {
-        if (password !== confirmPassword) {
-            Alert.alert(t('register.registerFailed'), t('register.passwordMismatch'))
+        setTouched({
+            inviteCode: true,
+            username: true,
+            name: true,
+            password: true,
+            confirmPassword: true,
+        })
+
+        if (!isFormValid) {
             return
         }
 
@@ -50,8 +113,17 @@ export default function RegisterScreen() {
                 { text: 'OK', onPress: () => router.replace('/login') },
             ])
         } catch (err) {
-            const message = err instanceof ApiError ? err.message : (err as Error).message
-            Alert.alert(t('register.registerFailed'), message)
+            console.error('Register error:', err)
+            const message = err instanceof ApiError ? err.message : t('register.unknownError', '發生未知錯誤')
+            const targetField = mapServerErrorToField(message)
+
+            if (targetField === 'inviteCode') {
+                setServerFieldError({ inviteCode: t('register.invalidInviteCode', '工廠代碼無效') })
+            } else if (targetField === 'username') {
+                setServerFieldError({ username: t('register.usernameTaken', '此帳號已被使用') })
+            } else {
+                Alert.alert(t('register.registerFailed'), message)
+            }
         } finally {
             setSubmitting(false)
         }
@@ -73,7 +145,7 @@ export default function RegisterScreen() {
 
             <ScrollView
                 contentContainerStyle={styles.scrollContent}
-                keyboardShouldPersistTaps='handled'
+                keyboardShouldPersistTaps='always'
                 showsVerticalScrollIndicator={false}>
                 <Text style={styles.title}>{t('register.title')}</Text>
 
@@ -84,14 +156,22 @@ export default function RegisterScreen() {
                             style={[
                                 styles.input,
                                 focusedField === 'inviteCode' && styles.inputFocused,
+                                inviteCodeError && styles.inputError,
                                 webNoOutlineStyle,
                             ]}
                             autoCapitalize='none'
                             value={inviteCode}
-                            onChangeText={setInviteCode}
+                            onChangeText={(text) => {
+                                setInviteCode(text)
+                                clearServerError('inviteCode')
+                            }}
                             onFocus={() => setFocusedField('inviteCode')}
-                            onBlur={() => setFocusedField(null)}
+                            onBlur={() => {
+                                setFocusedField(null)
+                                markTouched('inviteCode')
+                            }}
                         />
+                        {inviteCodeError && <Text style={styles.errorText}>{inviteCodeError}</Text>}
                     </View>
 
                     <View style={styles.field}>
@@ -100,14 +180,22 @@ export default function RegisterScreen() {
                             style={[
                                 styles.input,
                                 focusedField === 'username' && styles.inputFocused,
+                                usernameError && styles.inputError,
                                 webNoOutlineStyle,
                             ]}
                             autoCapitalize='none'
                             value={username}
-                            onChangeText={setUsername}
+                            onChangeText={(text) => {
+                                setUsername(text)
+                                clearServerError('username')
+                            }}
                             onFocus={() => setFocusedField('username')}
-                            onBlur={() => setFocusedField(null)}
+                            onBlur={() => {
+                                setFocusedField(null)
+                                markTouched('username')
+                            }}
                         />
+                        {usernameError && <Text style={styles.errorText}>{usernameError}</Text>}
                     </View>
 
                     <View style={styles.field}>
@@ -117,7 +205,10 @@ export default function RegisterScreen() {
                             value={name}
                             onChangeText={setName}
                             onFocus={() => setFocusedField('name')}
-                            onBlur={() => setFocusedField(null)}
+                            onBlur={() => {
+                                setFocusedField(null)
+                                markTouched('name')
+                            }}
                         />
                     </View>
 
@@ -127,14 +218,19 @@ export default function RegisterScreen() {
                             style={[
                                 styles.input,
                                 focusedField === 'password' && styles.inputFocused,
+                                passwordError && styles.inputError,
                                 webNoOutlineStyle,
                             ]}
                             secureTextEntry
                             value={password}
                             onChangeText={setPassword}
                             onFocus={() => setFocusedField('password')}
-                            onBlur={() => setFocusedField(null)}
+                            onBlur={() => {
+                                setFocusedField(null)
+                                markTouched('password')
+                            }}
                         />
+                        {passwordError && <Text style={styles.errorText}>{passwordError}</Text>}
                     </View>
 
                     <View style={styles.field}>
@@ -143,14 +239,19 @@ export default function RegisterScreen() {
                             style={[
                                 styles.input,
                                 focusedField === 'confirmPassword' && styles.inputFocused,
+                                confirmPasswordError && styles.inputError,
                                 webNoOutlineStyle,
                             ]}
                             secureTextEntry
                             value={confirmPassword}
                             onChangeText={setConfirmPassword}
                             onFocus={() => setFocusedField('confirmPassword')}
-                            onBlur={() => setFocusedField(null)}
+                            onBlur={() => {
+                                setFocusedField(null)
+                                markTouched('confirmPassword')
+                            }}
                         />
+                        {confirmPasswordError && <Text style={styles.errorText}>{confirmPasswordError}</Text>}
                     </View>
 
                     <TouchableOpacity
@@ -170,6 +271,8 @@ export default function RegisterScreen() {
                     </View>
                 </View>
             </ScrollView>
+
+            <LoadingOverlay visible={submitting} label={t('register.registering')} />
         </KeyboardAvoidingView>
     )
 }
@@ -225,14 +328,22 @@ const styles = StyleSheet.create({
     inputFocused: {
         borderColor: '#22C55E',
     },
+    inputError: {
+        borderColor: '#EF4444',
+    },
+    errorText: {
+        fontSize: 12,
+        color: '#EF4444',
+        marginTop: 4,
+    },
     button: {
-        backgroundColor: '#86EFAC',
+        backgroundColor: '#1F4D3A',
         borderRadius: 10,
         paddingVertical: 15,
         alignItems: 'center',
         marginTop: 8,
     },
-    buttonDisabled: { opacity: 0.6 },
+    buttonDisabled: { opacity: 0.5 },
     buttonText: { color: '#FFFFFF', fontSize: 16, fontWeight: '700' },
     loginRow: {
         flexDirection: 'row',
