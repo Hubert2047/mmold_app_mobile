@@ -53,6 +53,7 @@ export default function AccountScreen() {
             iconBg: '#F3F4F6',
             titleKey: 'account.equipmentManagement',
             descKey: 'account.equipmentManagementDesc',
+            onPress: () => router.push('/equipment'),
         },
         {
             icon: 'settings-outline',

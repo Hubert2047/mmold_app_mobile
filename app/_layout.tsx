@@ -9,7 +9,6 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import 'react-native-reanimated'
 import { AuthProvider, useAuth } from '../src/context/AuthContext'
 import i18n, { initI18n } from '../src/i18n'
-
 export { ErrorBoundary } from 'expo-router'
 
 export const unstable_settings = {
@@ -58,13 +57,15 @@ function RootLayoutNav() {
     const { tokens, isLoading } = useAuth()
     const segments = useSegments()
     const router = useRouter()
+
     useEffect(() => {
         if (isLoading) return
 
-        const inTabsGroup = segments[0] === '(tabs)'
-        if (!tokens && inTabsGroup) {
+        const inAuthGroup = segments[0] === 'login' || segments[0] === 'register'
+
+        if (!tokens && !inAuthGroup) {
             router.replace('/login')
-        } else if (tokens && !inTabsGroup) {
+        } else if (tokens && inAuthGroup) {
             router.replace('/(tabs)')
         }
     }, [tokens, isLoading, segments])
@@ -79,6 +80,7 @@ function RootLayoutNav() {
                 <Stack.Screen name='login' options={{ headerShown: false }} />
                 <Stack.Screen name='(tabs)' options={{ headerShown: false }} />
                 <Stack.Screen name='register' options={{ headerShown: false }} />
+                <Stack.Screen name='equipment' options={{ headerShown: false }} />
             </Stack>
         </ThemeProvider>
     )
