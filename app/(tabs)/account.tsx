@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons'
 import { router } from 'expo-router'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Alert, Modal, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { Alert, Linking, Modal, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { useAuth } from '../../src/context/AuthContext'
 import { changeLanguage } from '../../src/i18n'
 
@@ -19,6 +19,8 @@ const LANGUAGE_OPTIONS: { code: 'en' | 'zh-Hant'; label: string; nativeLabel: st
     { code: 'zh-Hant', label: 'Chinese (Traditional)', nativeLabel: '中文（繁體）' },
     { code: 'en', label: 'English', nativeLabel: 'English' },
 ]
+
+const CONTACT_US_URL = 'https://www.mmold.com/contact'
 
 export default function AccountScreen() {
     const { t, i18n } = useTranslation()
@@ -42,6 +44,20 @@ export default function AccountScreen() {
     async function handleSelectLanguage(code: 'en' | 'zh-Hant') {
         await changeLanguage(code)
         setLanguageModalVisible(false)
+    }
+
+    async function handleContactUs() {
+        try {
+            const canOpen = await Linking.canOpenURL(CONTACT_US_URL)
+            if (canOpen) {
+                await Linking.openURL(CONTACT_US_URL)
+            } else {
+                Alert.alert(t('common.error'), t('account.contactUsOpenFailed'))
+            }
+        } catch (err) {
+            console.error('Failed to open contact URL:', err)
+            Alert.alert(t('common.error'), t('account.contactUsOpenFailed'))
+        }
     }
 
     const currentLanguageLabel = LANGUAGE_OPTIONS.find((opt) => opt.code === i18n.language)?.nativeLabel ?? 'English'
@@ -85,6 +101,7 @@ export default function AccountScreen() {
             iconBg: '#F3F4F6',
             titleKey: 'account.contactUs',
             descKey: 'account.contactUsDesc',
+            onPress: handleContactUs,
         },
     ]
 
