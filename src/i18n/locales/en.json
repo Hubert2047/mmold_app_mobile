@@ -136,7 +136,11 @@
         "appVersion": "Green Assistant v2.0.0",
         "language": "Language",
         "languageDesc": "Change app language",
-        "selectLanguage": "Select language"
+        "selectLanguage": "Select language",
+        "rolePlatformAdmin": "Platform admin",
+        "roleUserManager": "User manager",
+        "roleDeviceManager": "Device manager",
+        "roleMember": "Member"
     },
     "notifications": {
         "title": "Push notification setup",

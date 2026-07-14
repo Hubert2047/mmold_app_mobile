@@ -1,4 +1,5 @@
 import { createContext, ReactNode, useContext, useEffect, useState } from 'react'
+import { apiFetch } from '../services/api'
 import { getMe, UserProfile } from '../services/auth'
 import { AuthTokens, getTokens, loadTokens, setTokens, subscribeTokens } from '../services/tokenStore'
 

@@ -24,7 +24,7 @@ const CONTACT_US_URL = 'https://www.mmold.com/contact'
 
 export default function AccountScreen() {
     const { t, i18n } = useTranslation()
-    const { logout } = useAuth()
+    const { logout, user } = useAuth()
     const [languageModalVisible, setLanguageModalVisible] = useState(false)
 
     function handleLogout() {
@@ -61,6 +61,14 @@ export default function AccountScreen() {
     }
 
     const currentLanguageLabel = LANGUAGE_OPTIONS.find((opt) => opt.code === i18n.language)?.nativeLabel ?? 'English'
+
+    const avatarInitial = user?.name?.trim()?.charAt(0) ?? '?'
+
+    const roleLabels: string[] = []
+    if (user?.isPlatformAdmin) roleLabels.push(t('account.rolePlatformAdmin'))
+    if (user?.canManageUsers) roleLabels.push(t('account.roleUserManager'))
+    if (user?.canManageDevices) roleLabels.push(t('account.roleDeviceManager'))
+    const roleText = roleLabels.length > 0 ? roleLabels.join(' · ') : t('account.roleMember')
 
     const menuItems: MenuItem[] = [
         {
@@ -111,11 +119,11 @@ export default function AccountScreen() {
                 <View style={styles.profileCard}>
                     <View style={styles.profileHeader}>
                         <View style={styles.avatar}>
-                            <Text style={styles.avatarText}>系</Text>
+                            <Text style={styles.avatarText}>{avatarInitial}</Text>
                         </View>
                         <View>
-                            <Text style={styles.adminName}>{t('account.adminName')}</Text>
-                            <Text style={styles.adminRole}>{t('account.adminRole')}</Text>
+                            <Text style={styles.adminName}>{user?.name ?? '—'}</Text>
+                            <Text style={styles.adminRole}>{roleText}</Text>
                         </View>
                     </View>
 
@@ -126,7 +134,7 @@ export default function AccountScreen() {
                             <Ionicons name='at-outline' size={16} color='#9CA3AF' />
                             <Text style={styles.infoLabel}>{t('account.username')}</Text>
                         </View>
-                        <Text style={styles.infoValue}>admin</Text>
+                        <Text style={styles.infoValue}>{user?.username ?? '—'}</Text>
                     </View>
 
                     <View style={styles.infoRow}>
@@ -134,7 +142,7 @@ export default function AccountScreen() {
                             <Ionicons name='business-outline' size={16} color='#9CA3AF' />
                             <Text style={styles.infoLabel}>{t('account.factory')}</Text>
                         </View>
-                        <Text style={styles.infoValue}>示範工廠</Text>
+                        <Text style={styles.infoValue}>{user?.organizationName ?? '—'}</Text>
                     </View>
 
                     <View style={styles.infoRow}>
@@ -142,7 +150,7 @@ export default function AccountScreen() {
                             <Ionicons name='pricetag-outline' size={16} color='#9CA3AF' />
                             <Text style={styles.infoLabel}>{t('account.factoryCode')}</Text>
                         </View>
-                        <Text style={styles.infoValue}>XHX-JAD</Text>
+                        <Text style={styles.infoValue}>{user?.organizationInviteCode ?? '—'}</Text>
                     </View>
                 </View>
 

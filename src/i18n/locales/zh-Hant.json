@@ -136,7 +136,11 @@
         "appVersion": "綠品助手 v2.0.0",
         "language": "語言",
         "languageDesc": "變更應用程式語言",
-        "selectLanguage": "選擇語言"
+        "selectLanguage": "選擇語言",
+        "rolePlatformAdmin": "平台管理員",
+        "roleUserManager": "用戶管理員",
+        "roleDeviceManager": "設備管理員",
+        "roleMember": "一般成員"
     },
     "notifications": {
         "title": "手機通知訂閱",
