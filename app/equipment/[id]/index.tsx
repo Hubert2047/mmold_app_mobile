@@ -1,13 +1,39 @@
-import { deleteEquipment, getEquipmentById } from '@/src/data/equipment'
+import LoadingOverlay from '@/components/LoadingOverlay'
+import { useAuth } from '@/src/context/AuthContext'
+import { useDevices } from '@/src/context/DevicesContext'
+import { deleteDevice } from '@/src/services/devices'
+import { getGateWays } from '@/src/services/gateways'
+import { IGateway } from '@/src/type'
 import { Ionicons } from '@expo/vector-icons'
 import { router, useLocalSearchParams } from 'expo-router'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 
 export default function EquipmentDetailScreen() {
     const { t } = useTranslation()
+    const { user, tokens } = useAuth()
     const { id } = useLocalSearchParams<{ id: string }>()
-    const item = getEquipmentById(id)
+    const { devices, loading, fetchDevices, getDeviceById } = useDevices()
+    const [deleting, setDeleting] = useState(false)
+    const [gateways, setGateways] = useState<IGateway[]>([])
+
+    const item = getDeviceById(id)
+
+    useEffect(() => {
+        if (!item && !loading) {
+            fetchDevices()
+        }
+    }, [item, loading])
+
+    useEffect(() => {
+        if (!user?.organizationId || !tokens?.accessToken) return
+        getGateWays(user.organizationId, tokens.accessToken)
+            .then(setGateways)
+            .catch(() => {})
+    }, [user?.organizationId, tokens?.accessToken])
+
+    const gatewayName = gateways.find((g) => g.id === item?.gatewayId)?.name
 
     function handleEdit() {
         router.push(`/equipment/${id}/edit`)
@@ -19,9 +45,17 @@ export default function EquipmentDetailScreen() {
             {
                 text: t('equipment.delete'),
                 style: 'destructive',
-                onPress: () => {
-                    deleteEquipment(id)
-                    router.back()
+                onPress: async () => {
+                    if (!user?.organizationId) return
+                    setDeleting(true)
+                    try {
+                        await deleteDevice(user.organizationId, id)
+                        await fetchDevices({ silent: true })
+                        router.back()
+                    } catch (err) {
+                        setDeleting(false)
+                        Alert.alert(t('equipment.deleteFailed'))
+                    }
                 },
             },
         ])
@@ -37,10 +71,16 @@ export default function EquipmentDetailScreen() {
                     </TouchableOpacity>
                     <View style={{ width: 22 }} />
                 </View>
-                <View style={styles.emptyState}>
-                    <Ionicons name='alert-circle-outline' size={40} color='#D1D5DB' />
-                    <Text style={styles.emptyText}>{t('equipment.notFound')}</Text>
-                </View>
+                {loading && devices.length === 0 ? (
+                    <View style={styles.emptyState}>
+                        <LoadingOverlay visible label={t('equipment.loading')} variant='inline' />
+                    </View>
+                ) : (
+                    <View style={styles.emptyState}>
+                        <Ionicons name='alert-circle-outline' size={40} color='#D1D5DB' />
+                        <Text style={styles.emptyText}>{t('equipment.notFound')}</Text>
+                    </View>
+                )}
             </View>
         )
     }
@@ -65,22 +105,72 @@ export default function EquipmentDetailScreen() {
                         </View>
                         <View>
                             <Text style={styles.deviceName}>{item.name}</Text>
-                            <Text style={styles.deviceSub}>{item.category}</Text>
+                            <Text style={styles.deviceSub}>{item.type}</Text>
                         </View>
                     </View>
 
                     <View style={styles.divider} />
 
-                    <InfoRow label={t('equipment.meterId')} value={item.meterId} />
+                    <InfoRow label={t('equipment.gateway')} value={gatewayName ?? '—'} />
+                    <InfoRow label={t('equipment.meterId')} value={item.externalId ?? '—'} />
                     <InfoRow label={t('equipment.phase')} value={item.phase} />
-                    <InfoRow label='kW' value={String(item.kw)} />
-                    <InfoRow label='A' value={String(item.a)} />
-                    <InfoRow label='V' value={String(item.v)} />
+                    <InfoRow label={`${t('equipment.ratedVoltage')} (V)`} value={String(item.ratedVoltage)} />
+                    <InfoRow label={`${t('equipment.ratedCurrent')} (A)`} value={String(item.ratedCurrent)} />
+                    <InfoRow label={`${t('equipment.ratedPower')} (kW)`} value={String(item.ratedPowerKw)} />
+                    <InfoRow label={t('equipment.ctRatio')} value={item.ctRatio != null ? String(item.ctRatio) : '—'} />
                 </View>
 
-                <TouchableOpacity style={styles.deleteCard} onPress={handleDelete}>
+                <View style={styles.card}>
+                    <View style={styles.sectionHeaderRow}>
+                        <Text style={styles.sectionTitle}>{t('equipment.alertSettings')}</Text>
+                        <View style={[styles.statusPill, item.alertsEnabled ? styles.statusOn : styles.statusOff]}>
+                            <Text
+                                style={[
+                                    styles.statusPillText,
+                                    item.alertsEnabled ? styles.statusOnText : styles.statusOffText,
+                                ]}>
+                                {item.alertsEnabled ? t('equipment.enabled') : t('equipment.disabled')}
+                            </Text>
+                        </View>
+                    </View>
+
+                    <View style={styles.divider} />
+
+                    <InfoRow
+                        label={t('equipment.powerSpikeThreshold')}
+                        value={
+                            item.alertPowerSpikeThreshold != null
+                                ? String(item.alertPowerSpikeThreshold)
+                                : t('equipment.default')
+                        }
+                    />
+                    <InfoRow
+                        label={t('equipment.overcurrentThreshold')}
+                        value={
+                            item.alertOvercurrentThreshold != null
+                                ? String(item.alertOvercurrentThreshold)
+                                : t('equipment.default')
+                        }
+                    />
+                    <InfoRow
+                        label={t('equipment.noDataTimeout')}
+                        value={
+                            item.alertNoDataTimeout != null ? String(item.alertNoDataTimeout) : t('equipment.default')
+                        }
+                    />
+                    <InfoRow
+                        label={t('equipment.imbalanceThreshold')}
+                        value={
+                            item.alertImbalanceThreshold != null
+                                ? String(item.alertImbalanceThreshold)
+                                : t('equipment.default')
+                        }
+                    />
+                </View>
+
+                <TouchableOpacity style={styles.deleteCard} onPress={handleDelete} disabled={deleting}>
                     <Ionicons name='trash-outline' size={18} color='#DC2626' />
-                    <Text style={styles.deleteText}>{t('equipment.delete')}</Text>
+                    <Text style={styles.deleteText}>{deleting ? t('equipment.deleting') : t('equipment.delete')}</Text>
                 </TouchableOpacity>
             </ScrollView>
         </View>
@@ -138,6 +228,14 @@ const styles = StyleSheet.create({
     },
     infoLabel: { fontSize: 13, color: '#6B7280' },
     infoValue: { fontSize: 13, fontWeight: '700', color: '#111827' },
+    sectionHeaderRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+    sectionTitle: { fontSize: 14, fontWeight: '700', color: '#111827' },
+    statusPill: { borderRadius: 8, paddingVertical: 4, paddingHorizontal: 10 },
+    statusOn: { backgroundColor: '#DCFCE7' },
+    statusOff: { backgroundColor: '#F3F4F6' },
+    statusPillText: { fontSize: 11, fontWeight: '700' },
+    statusOnText: { color: '#16A34A' },
+    statusOffText: { color: '#6B7280' },
     deleteCard: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -148,6 +246,6 @@ const styles = StyleSheet.create({
         paddingVertical: 14,
     },
     deleteText: { fontSize: 14, fontWeight: '700', color: '#DC2626' },
-    emptyState: { alignItems: 'center', justifyContent: 'center', paddingTop: 60, gap: 8 },
+    emptyState: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingTop: 60, gap: 8 },
     emptyText: { fontSize: 13, color: '#9CA3AF' },
 })

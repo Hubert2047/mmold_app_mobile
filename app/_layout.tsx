@@ -1,4 +1,5 @@
 import { useColorScheme } from '@/components/useColorScheme'
+import { DevicesProvider } from '@/src/context/DevicesContext'
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native'
 import { useFonts } from 'expo-font'
 import { Stack, useRouter, useSegments } from 'expo-router'
@@ -45,7 +46,9 @@ export default function RootLayout() {
         <GestureHandlerRootView style={{ flex: 1 }}>
             <I18nextProvider i18n={i18n}>
                 <AuthProvider>
-                    <RootLayoutNav />
+                    <DevicesProvider>
+                        <RootLayoutNav />
+                    </DevicesProvider>
                 </AuthProvider>
             </I18nextProvider>
         </GestureHandlerRootView>

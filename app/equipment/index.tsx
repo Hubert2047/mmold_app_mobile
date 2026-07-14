@@ -1,4 +1,8 @@
-import { deleteEquipment, Equipment, getEquipmentList } from '@/src/data/equipment'
+import LoadingOverlay from '@/components/LoadingOverlay'
+import { useAuth } from '@/src/context/AuthContext'
+import { useDevices } from '@/src/context/DevicesContext'
+import { deleteDevice } from '@/src/services/devices'
+import { IDevice } from '@/src/type'
 import { Ionicons } from '@expo/vector-icons'
 import { useFocusEffect } from '@react-navigation/native'
 import { router } from 'expo-router'
@@ -11,7 +15,8 @@ type SwipeableRef = React.RefObject<ComponentRef<typeof Swipeable> | null>
 
 export default function EquipmentManagementScreen() {
     const { t } = useTranslation()
-    const [equipment, setEquipment] = useState<Equipment[]>(getEquipmentList())
+    const { user } = useAuth()
+    const { devices, loading, error, fetchDevices } = useDevices()
     const [searchText, setSearchText] = useState('')
     const swipeableRefs = useRef<Map<string, SwipeableRef>>(new Map())
 
@@ -26,20 +31,20 @@ export default function EquipmentManagementScreen() {
 
     useFocusEffect(
         useCallback(() => {
-            setEquipment([...getEquipmentList()])
-        }, []),
+            fetchDevices({ silent: true })
+        }, [fetchDevices]),
     )
 
     const filteredEquipment = useMemo(() => {
         const query = searchText.trim().toLowerCase()
-        if (!query) return equipment
-        return equipment.filter(
+        if (!query) return devices
+        return devices.filter(
             (item) =>
                 item.name.toLowerCase().includes(query) ||
-                item.meterId.toLowerCase().includes(query) ||
-                item.category.toLowerCase().includes(query),
+                (item.externalId ?? '').toLowerCase().includes(query) ||
+                item.type.toLowerCase().includes(query),
         )
-    }, [equipment, searchText])
+    }, [devices, searchText])
 
     function closeOtherSwipeables(exceptId: string) {
         swipeableRefs.current.forEach((ref, id) => {
@@ -47,15 +52,18 @@ export default function EquipmentManagementScreen() {
         })
     }
 
-    function handleEdit(item: Equipment) {
+    function handleEdit(item: IDevice) {
         swipeableRefs.current.get(item.id)?.current?.close()
         router.push(`/equipment/${item.id}/edit`)
     }
 
-    function handleDelete(item: Equipment) {
+    async function handleDelete(item: IDevice) {
         swipeableRefs.current.get(item.id)?.current?.close()
-        deleteEquipment(item.id)
-        setEquipment([...getEquipmentList()])
+        if (!user?.organizationId) return
+        try {
+            await deleteDevice(user.organizationId, item.id)
+            fetchDevices({ silent: true })
+        } catch (err) {}
     }
 
     function handleAdd() {
@@ -83,67 +91,82 @@ export default function EquipmentManagementScreen() {
                 />
             </View>
 
-            <FlatList
-                data={filteredEquipment}
-                keyExtractor={(item) => item.id}
-                contentContainerStyle={styles.listContent}
-                showsVerticalScrollIndicator={false}
-                renderItem={({ item }) => (
-                    <Swipeable
-                        ref={getSwipeableRef(item.id)}
-                        onSwipeableWillOpen={() => closeOtherSwipeables(item.id)}
-                        renderRightActions={() => (
-                            <View style={styles.swipeActions}>
-                                <TouchableOpacity
-                                    style={[styles.swipeButton, styles.editButton]}
-                                    onPress={() => handleEdit(item)}>
-                                    <Ionicons name='pencil' size={18} color='#2563EB' />
-                                </TouchableOpacity>
-                                <TouchableOpacity
-                                    style={[styles.swipeButton, styles.deleteButton]}
-                                    onPress={() => handleDelete(item)}>
-                                    <Ionicons name='trash' size={18} color='#DC2626' />
-                                </TouchableOpacity>
-                            </View>
-                        )}>
-                        <TouchableOpacity
-                            style={styles.card}
-                            onPress={() => router.push(`/equipment/${item.id}`)}
-                            activeOpacity={0.7}>
-                            <View style={styles.cardTopRow}>
-                                <View style={styles.iconBox}>
-                                    <Ionicons name='speedometer-outline' size={16} color='#6B7280' />
+            {loading ? (
+                <View style={styles.centerState}>
+                    <LoadingOverlay visible label={t('equipment.loading')} variant='inline' />
+                </View>
+            ) : error ? (
+                <View style={styles.centerState}>
+                    <Text style={styles.emptyText}>{t('equipment.loadError')}</Text>
+                    <TouchableOpacity onPress={() => fetchDevices()} style={styles.retryButton}>
+                        <Text style={styles.retryText}>{t('common.retry')}</Text>
+                    </TouchableOpacity>
+                </View>
+            ) : (
+                <FlatList
+                    data={filteredEquipment}
+                    keyExtractor={(item) => item.id}
+                    contentContainerStyle={styles.listContent}
+                    showsVerticalScrollIndicator={false}
+                    onRefresh={() => fetchDevices()}
+                    refreshing={false}
+                    renderItem={({ item }) => (
+                        <Swipeable
+                            ref={getSwipeableRef(item.id)}
+                            onSwipeableWillOpen={() => closeOtherSwipeables(item.id)}
+                            renderRightActions={() => (
+                                <View style={styles.swipeActions}>
+                                    <TouchableOpacity
+                                        style={[styles.swipeButton, styles.editButton]}
+                                        onPress={() => handleEdit(item)}>
+                                        <Ionicons name='pencil' size={18} color='#2563EB' />
+                                    </TouchableOpacity>
+                                    <TouchableOpacity
+                                        style={[styles.swipeButton, styles.deleteButton]}
+                                        onPress={() => handleDelete(item)}>
+                                        <Ionicons name='trash' size={18} color='#DC2626' />
+                                    </TouchableOpacity>
                                 </View>
-                                <View style={{ flex: 1 }}>
-                                    <Text style={styles.deviceName}>{item.name}</Text>
-                                    <Text style={styles.deviceSub}>
-                                        {item.category} · {item.meterId} · {item.phase}
-                                    </Text>
+                            )}>
+                            <TouchableOpacity
+                                style={styles.card}
+                                onPress={() => router.push(`/equipment/${item.id}`)}
+                                activeOpacity={0.7}>
+                                <View style={styles.cardTopRow}>
+                                    <View style={styles.iconBox}>
+                                        <Ionicons name='speedometer-outline' size={16} color='#6B7280' />
+                                    </View>
+                                    <View style={{ flex: 1 }}>
+                                        <Text style={styles.deviceName}>{item.name}</Text>
+                                        <Text style={styles.deviceSub}>
+                                            {item.type} · {item.externalId ?? '—'} · {item.phase}
+                                        </Text>
+                                    </View>
+                                    <Ionicons name='chevron-forward' size={16} color='#D1D5DB' />
                                 </View>
-                                <Ionicons name='chevron-forward' size={16} color='#D1D5DB' />
-                            </View>
 
-                            <View style={styles.specRow}>
-                                <View style={styles.specPill}>
-                                    <Text style={styles.specText}>{item.kw} kw</Text>
+                                <View style={styles.specRow}>
+                                    <View style={styles.specPill}>
+                                        <Text style={styles.specText}>{item.ratedPowerKw} kw</Text>
+                                    </View>
+                                    <View style={styles.specPill}>
+                                        <Text style={styles.specText}>{item.ratedCurrent} A</Text>
+                                    </View>
+                                    <View style={styles.specPill}>
+                                        <Text style={styles.specText}>{item.ratedVoltage} v</Text>
+                                    </View>
                                 </View>
-                                <View style={styles.specPill}>
-                                    <Text style={styles.specText}>{item.a} A</Text>
-                                </View>
-                                <View style={styles.specPill}>
-                                    <Text style={styles.specText}>{item.v} v</Text>
-                                </View>
-                            </View>
-                        </TouchableOpacity>
-                    </Swipeable>
-                )}
-                ListEmptyComponent={
-                    <View style={styles.emptyState}>
-                        <Ionicons name='cube-outline' size={40} color='#D1D5DB' />
-                        <Text style={styles.emptyText}>{t('equipment.noResults')}</Text>
-                    </View>
-                }
-            />
+                            </TouchableOpacity>
+                        </Swipeable>
+                    )}
+                    ListEmptyComponent={
+                        <View style={styles.emptyState}>
+                            <Ionicons name='cube-outline' size={40} color='#D1D5DB' />
+                            <Text style={styles.emptyText}>{t('equipment.noResults')}</Text>
+                        </View>
+                    }
+                />
+            )}
 
             <TouchableOpacity style={styles.fab} onPress={handleAdd} activeOpacity={0.85}>
                 <Ionicons name='add' size={26} color='#FFFFFF' />
@@ -151,7 +174,6 @@ export default function EquipmentManagementScreen() {
         </View>
     )
 }
-
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#F9FAFB' },
     header: {
@@ -187,6 +209,15 @@ const styles = StyleSheet.create({
         color: '#111827',
     },
     listContent: { paddingHorizontal: 16, paddingBottom: 100 },
+    centerState: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
+    retryButton: {
+        borderWidth: 1,
+        borderColor: '#E5E7EB',
+        borderRadius: 8,
+        paddingVertical: 8,
+        paddingHorizontal: 16,
+    },
+    retryText: { fontSize: 13, fontWeight: '600', color: '#111827' },
     card: {
         backgroundColor: '#FFFFFF',
         borderRadius: 12,
